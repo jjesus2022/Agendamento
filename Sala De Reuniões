@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamento de Salas de Reunião</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .schedule {
+            margin-top: 20px;
+        }
+        .schedule-item {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Agendamento de Salas de Reunião</h1>
+        <form id="bookingForm">
+            <div class="form-group">
+                <label for="title">Título da Reunião:</label>
+                <input type="text" id="title" required>
+            </div>
+            <div class="form-group">
+                <label for="room">Sala:</label>
+                <select id="room" required>
+                    <option value="">Selecione uma sala</option>
+                    <option value="Sala 1">Sala 1</option>
+                    <option value="Sala 2">Sala 2</option>
+                    <option value="Sala 3">Sala 3</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date">Data:</label>
+                <input type="date" id="date" required>
+            </div>
+            <div class="form-group">
+                <label for="startTime">Hora de Início:</label>
+                <input type="time" id="startTime" required>
+            </div>
+            <div class="form-group">
+                <label for="endTime">Hora de Fim:</label>
+                <input type="time" id="endTime" required>
+            </div>
+            <button type="submit">Agendar</button>
+        </form>
+        <div class="error" id="error"></div>
+        <div class="schedule" id="schedule">
+            <h2>Agendamentos</h2>
+            <!-- Os agendamentos serão exibidos aqui -->
+        </div>
+    </div>
+
+    <script>
+        const bookings = [];
+
+        document.getElementById('bookingForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const title = document.getElementById('title').value;
+            const room = document.getElementById('room').value;
+            const date = document.getElementById('date').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const error = document.getElementById('error');
+
+            // Verificar se já existe um agendamento na mesma sala, data e horário
+            const exists = bookings.some(booking => booking.room === room && booking.date === date && 
+                ((startTime >= booking.startTime && startTime < booking.endTime) || 
+                (endTime > booking.startTime && endTime <= booking.endTime) || 
+                (startTime <= booking.startTime && endTime >= booking.endTime)));
+
+            if (exists) {
+                error.textContent = 'Já existe um agendamento para esta sala no intervalo de tempo selecionado.';
+            } else {
+                error.textContent = '';
+                const booking = { title, room, date, startTime, endTime };
+                bookings.push(booking);
+
+                const schedule = document.getElementById('schedule');
+                const scheduleItem = document.createElement('div');
+                scheduleItem.className = 'schedule-item';
+                scheduleItem.innerHTML = `Título: ${title}, Sala: ${room}, Data: ${date}, Início: ${startTime}, Fim: ${endTime} <button onclick="cancelBooking('${title}', '${room}', '${date}', '${startTime}', '${endTime}')">Cancelar</button>`;
+                schedule.appendChild(scheduleItem);
+
+                // Limpar o formulário
+                document.getElementById('bookingForm').reset();
+            }
+        });
+
+        function cancelBooking(title, room, date, startTime, endTime) {
+            const index = bookings.findIndex(booking => booking.title === title && booking.room === room && booking.date === date && booking.startTime === startTime && booking.endTime === endTime);
+            if (index !== -1) {
+                bookings.splice(index, 1);
+                const schedule = document.getElementById('schedule');
+                schedule.innerHTML = '<h2>Agendamentos</h2>';
+                bookings.forEach(booking => {
+                    const scheduleItem = document.createElement('div');
+                    scheduleItem.className = 'schedule-item';
+                    scheduleItem.innerHTML = `Título: ${booking.title}, Sala: ${booking.room}, Data: ${booking.date}, Início: ${booking.startTime}, Fim: ${booking.endTime} <button onclick="cancelBooking('${booking.title}', '${booking.room}', '${booking.date}', '${booking.startTime}', '${booking.endTime}')">Cancelar</button>`;
+                    schedule.appendChild(scheduleItem);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
